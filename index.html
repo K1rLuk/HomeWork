@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0B1026">
+<title>ДЗ-Стекло</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#fff;background:linear-gradient(135deg,#0B1026,#1A1040 55%,#062033);overflow:hidden}
+body::before,body::after{content:'';position:fixed;border-radius:50%;pointer-events:none}
+body::before{width:300px;height:300px;top:-80px;left:-60px;background:radial-gradient(circle,rgba(124,77,255,.35),transparent 70%)}
+body::after{width:320px;height:320px;bottom:-100px;right:-70px;background:radial-gradient(circle,rgba(0,188,212,.3),transparent 70%)}
+.glass{background:linear-gradient(135deg,rgba(255,255,255,.14),rgba(255,255,255,.05) 45%,rgba(255,255,255,.10));border:1px solid rgba(255,255,255,.22);border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+main{position:fixed;inset:0;padding:12px 12px calc(78px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px}
+[hidden]{display:none!important}
+#modeBar{padding:10px;display:flex;align-items:center;gap:6px}
+#chips{display:flex;flex-wrap:wrap;gap:8px;flex:1}
+.chip{border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:rgba(255,255,255,.75);border-radius:14px;padding:8px 13px;font-size:13px;font-weight:600;transition:.25s cubic-bezier(.2,.8,.2,1)}
+.chip.on{background:rgba(124,77,255,.45);border-color:rgba(255,255,255,.55);color:#fff;transform:scale(1.03)}
+.iconbtn{background:none;border:0;color:rgba(255,255,255,.6);font-size:18px;padding:6px;cursor:pointer}
+#list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:2px 2px 6px;scroll-behavior:smooth}
+.card{padding:14px 16px;animation:pop .32s cubic-bezier(.2,.8,.2,1)}
+@keyframes pop{from{opacity:0;transform:translateY(12px) scale(.98)}}
+.q{color:rgba(255,255,255,.55);font-size:12px;font-weight:600;line-height:1.35;word-break:break-word}
+.a{white-space:pre-wrap;font-size:15px;line-height:1.5;margin:0;word-break:break-word}
+.row{display:flex;justify-content:space-between;align-items:center}
+.mini{margin-top:10px;width:100%;border:1px solid rgba(255,255,255,.3);background:rgba(124,77,255,.18);color:#CBB3FF;border-radius:14px;padding:9px;font-size:13px;font-weight:600}
+.spin{width:18px;height:18px;border:2px solid rgba(255,255,255,.25);border-top-color:#9E7BFF;border-radius:50%;animation:rot .8s linear infinite;display:inline-block;vertical-align:middle;margin-right:10px}
+@keyframes rot{to{transform:rotate(360deg)}}
+#inputBar{padding:8px}
+#prev{display:flex;gap:8px;align-items:center;margin:0 4px 6px;font-size:12px;color:rgba(255,255,255,.7)}
+#prev img{width:52px;height:52px;object-fit:cover;border-radius:12px}
+#inRow{display:flex;align-items:flex-end;gap:4px}
+#q{flex:1;background:none;border:0;outline:0;color:#fff;font-size:15px;font-family:inherit;resize:none;max-height:120px;padding:10px 6px;line-height:1.4}
+#q::placeholder{color:rgba(255,255,255,.3)}
+#send{border:0;width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#9E7BFF,#7C4DFF);color:#fff;font-size:20px;box-shadow:0 4px 16px rgba(124,77,255,.5);transition:.2s;display:flex;align-items:center;justify-content:center}
+#send:disabled{background:rgba(255,255,255,.15);box-shadow:none}
+nav{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));display:flex;padding:6px;z-index:5}
+nav button{flex:1;border:0;background:none;color:rgba(255,255,255,.55);border-radius:14px;padding:8px 0 6px;font-size:11px;cursor:pointer;transition:.25s}
+nav button .ic{display:block;font-size:21px;margin:0 auto 2px;transition:.25s}
+nav button.on{background:rgba(124,77,255,.45);color:#fff}
+nav button.on .ic{transform:scale(1.12)}
+canvas{width:100%;height:100%;display:block}
+.field{width:86px}
+.field input,select{width:100%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:12px;color:#fff;padding:9px 8px;font-size:14px;outline:0}
+.field label{font-size:11px;color:rgba(255,255,255,.55);margin:0 0 3px 2px;display:block}
+#drawControls{padding:12px;display:flex;flex-wrap:wrap;gap:8px}
+#drawBox{flex:1;padding:8px;min-height:0}
+.hint{font-size:12px;color:rgba(255,255,255,.35);text-align:center}
+#modal{position:fixed;inset:0;background:rgba(5,8,20,.6);display:flex;align-items:flex-end;justify-content:center;z-index:9}
+#modalCard{width:100%;max-width:520px;margin:12px;padding:16px;border-radius:26px}
+#modalCanvasBox{height:300px;margin-top:10px}
+#toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);background:rgba(30,25,60,.92);border:1px solid rgba(255,255,255,.25);padding:9px 18px;border-radius:14px;font-size:13px;opacity:0;transition:.3s;z-index:20;pointer-events:none}
+#toast.show{opacity:1;transform:translateX(-50%)}
+select option{background:#1A1040}
+</style>
+</head>
+<body>
+<main id="tabHelper">
+  <div class="glass" id="modeBar"><div id="chips"></div><button class="iconbtn" id="clear" title="Очистить">🗑</button></div>
+  <div id="list"></div>
+  <div class="glass" id="inputBar">
+    <div id="prev" hidden><img id="prevImg" alt=""><span>фото прикреплено</span><span style="flex:1"></span><button class="iconbtn" id="prevX">✕</button></div>
+    <div id="inRow">
+      <button class="iconbtn" id="cam" style="font-size:20px">📷</button>
+      <input type="file" id="file" accept="image/*" hidden>
+      <textarea id="q" rows="1" placeholder="Задача, вопрос или фотка..."></textarea>
+      <button id="send">↑</button>
+    </div>
+  </div>
+</main>
+<main id="tabDraw" hidden>
+  <div class="glass" id="drawControls">
+    <div class="field" style="width:100%"><label>Фигура</label>
+      <select id="fig">
+        <option value="triangle">Треугольник (a,b,c — стороны)</option>
+        <option value="rect">Прямоугольник (a,b — стороны)</option>
+        <option value="parallelogram">Параллелограмм (a,b,угол)</option>
+        <option value="trapezoid">Трапеция (a,b — основания, c,d — боковые)</option>
+      </select></div>
+    <div class="field"><label>a</label><input id="va" inputmode="decimal" value="9"></div>
+    <div class="field"><label>b</label><input id="vb" inputmode="decimal" value="8"></div>
+    <div class="field"><label>c</label><input id="vc" inputmode="decimal" value="7"></div>
+    <div class="field"><label>d</label><input id="vd" inputmode="decimal" value="6"></div>
+    <div class="field"><label>угол°</label><input id="vang" inputmode="decimal" value="40"></div>
+  </div>
+  <p class="hint">Чертёж строится строго в масштабе по твоим числам, без искажений</p>
+  <div class="glass" id="drawBox"><canvas id="cv"></canvas></div>
+</main>
+<nav class="glass">
+  <button id="navH" class="on"><span class="ic">🤖</span>Помощник</button>
+  <button id="navD"><span class="ic">📐</span>Чертёж</button>
+</nav>
+<div id="modal" hidden><div class="glass" id="modalCard">
+  <div class="row"><b>Чертёж по данным задачи</b><button class="iconbtn" id="mX">✕</button></div>
+  <div id="modalCanvasBox"><canvas id="mcv"></canvas></div>
+  <p class="hint" style="margin:8px 0 0">Масштаб строго по числам, без искажений</p>
+</div></div>
+<div id="toast"></div>
+<script>
+const MODES=['ОТВЕТ','РЕШЕНИЕ','ТЕТРАДЬ','СОЧИНЕНИЕ'];
+const API='https://text.pollinations.ai/openai';
+const SYS=`Ты — мозг мобильного помощника по домашке для ученика 9 класса. ВНУТРЕННИЙ ПОРЯДОК МЫШЛЕНИЯ (всегда, скрыто): 1) выпиши данные и что нужно найти; 2) определи предмет и тему; 3) вспомни нужные законы, формулы, правила; 4) составь план; 5) вычисли, проверяя единицы и смысл; 6) сверь ответ с условием. Наружу выдавай только результат по режиму.
+ПРАВИЛА:
+1. Предмет определяй сам по тексту или фото.
+2. Если пришло фото: сначала расшифруй рукописный текст и чертёж. Если что-то не читается — скажи прямо, что не читается, и реши то, что видно.
+3. Режим в первой строке запроса в квадратных скобках:
+[ОТВЕТ] — только итоговый ответ.
+[РЕШЕНИЕ] — короткий пошаговый ход + ответ.
+[ТЕТРАДЬ] — оформи как ученик в тетради. Физика: "Дано:", "СИ:", "Решение:", "Ответ:". Геометрия и остальное: "Дано:", "Найти:", "Решение:", "Ответ:". Без латеха.
+[СОЧИНЕНИЕ] — текст как обычный девятиклассник: простыми словами, грамотно.
+4. Объём: не указано сколько слов — не более 30 слов. Указано "от X до Y" или "N слов" — держись числа.
+5. Геометрия: последней строкой добавь: ЧЕРТЕЖ: фигура; a=..; b=..; c=..; d=..; angle=.. — только известные числа. Фигуры: triangle, rect, parallelogram, trapezoid. У rect и parallelogram a,b — стороны, angle — угол при A. У trapezoid a,b — основания (a снизу), c,d — боковые.
+6. Пиши на русском, по делу, без отказов и нравоучений.`;
+const SYS_SHORT='Ты — помощник по домашке для 9 класса. Определи предмет сам, рассуждай поэтапно, отвечай по делу на русском. Если объём не указан — не более 30 слов.';
+const $=id=>document.getElementById(id);
+let mode=2,imgB64=null,busy=false;
+let items=JSON.parse(localStorage.getItem('hw_items')||'[]');
+MODES.forEach((m,i)=>{const b=document.createElement('button');b.className='chip'+(i===mode?' on':'');b.textContent=m;b.onclick=()=>{mode=i;[...$('chips').children].forEach((c,j)=>c.classList.toggle('on',j===i));};$('chips').appendChild(b);});
+function save(){localStorage.setItem('hw_items',JSON.stringify(items));}
+function esc(s){return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+function toast(t){$('toast').textContent=t;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),1400);}
+function renderList(){$('list').innerHTML=items.length?items.map((it,i)=>`<div class="glass card"><div class="row"><p class="q" style="flex:1;margin:0 8px 8px 0">${esc(it.q)}</p><button class="iconbtn" data-copy="${i}">⧉</button></div><p class="a">${esc(it.a)}</p>${it.draw?`<button class="mini" data-draw="${i}">📐 Показать чертёж</button>`:''}</div>`).join(''):`<p class="hint" style="margin:auto">Фоткай тетрадь или пиши задачу.<br>Режим выбери сверху.</p>`;}
+$('list').addEventListener('click',e=>{const c=e.target.closest('[data-copy]'),d=e.target.closest('[data-draw]');
+if(c){const t=items[+c.dataset.copy].a;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Скопировано')).catch(()=>{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();toast('Скопировано');});}
+if(d){openDraw(items[+d.dataset.draw].draw);}});
+$('clear').onclick=()=>{items=[];save();renderList();};
+function openDraw(spec){$('modal').hidden=false;requestAnimationFrame(()=>paint($('mcv'),spec.fig,spec.v));}
+$('mX').onclick=()=>$('modal').hidden=true;
+$('modal').onclick=e=>{if(e.target===$('modal'))$('modal').hidden=true;};
+$('cam').onclick=()=>$('file').click();
+$('prevX').onclick=()=>{imgB64=null;$('prev').hidden=true;};
+$('file').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{imgB64=await fileToB64(f);$('prevImg').src='data:image/jpeg;base64,'+imgB64;$('prev').hidden=false;}catch(err){toast('Не смог прочитать фото');}e.target.value='';};
+function fileToB64(f){return new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>{const img=new Image();img.onload=()=>{const k=Math.min(1,1100/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext('2d').drawImage(img,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.72).split(',')[1]);};img.onerror=rej;img.src=fr.result;};fr.onerror=rej;fr.readAsDataURL(f);});}
+function withTO(fn,ms=50000){const c=new AbortController();const t=setTimeout(()=>c.abort(),ms);return fn(c.signal).finally(()=>clearTimeout(t));}
+async function callNet(model,content,signal){const r=await fetch(API,{method:'POST',signal,headers:{'Content-Type':'application/json'},body:JSON.stringify({model,stream:false,messages:[{role:'system',content:SYS},{role:'user',content}]})});if(!r.ok)throw new Error('http '+r.status);const j=await r.json();const s=j&&j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content;if(!s||!s.trim())throw new Error('пусто');return s.trim();}
+async function callGet(plain,signal){const r=await fetch('https://text.pollinations.ai/'+encodeURIComponent(plain),{signal});if(!r.ok)throw new Error('http '+r.status);const t=await r.text();if(!t.trim())throw new Error('пусто');return t.trim();}
+async function askAll(content,body){const seq=[s=>callNet('openai',content,s),s=>callNet('openai',content,s)];if(typeof content==='string')seq.push(s=>callNet('mistral',content,s),s=>callGet(SYS_SHORT+'\n'+body,s));let e;for(const f of seq){try{return await withTO(f);}catch(err){e=err;}}throw e;}
+function parseDraw(s){for(const line of s.split('\n')){const t=line.trim();if(!t.toUpperCase().startsWith('ЧЕРТЕЖ:'))continue;const raw=t.slice(t.indexOf(':')+1);const low=raw.toLowerCase();let fig='triangle';if(low.includes('rect')||low.includes('прямоуг'))fig='rect';else if(low.includes('parallel')||low.includes('парал'))fig='parallelogram';else if(low.includes('trap')||low.includes('трап'))fig='trapezoid';const v={};for(const p0 of raw.split(';')){const p=p0.trim().toLowerCase();const eq=p.indexOf('=');if(eq<1)continue;const m=p.slice(eq+1).match(/-?\d+([.,]\d+)?/);if(m)v[p.slice(0,eq).trim()]=parseFloat(m[0].replace(',','.'));}return{fig,v};}return null;}
+function addLoad(){const d=document.createElement('div');d.className='glass card';d.id='load';d.innerHTML='<span class="spin"></span><span style="color:rgba(255,255,255,.7);font-size:13px">нейронка думает...</span>';$('list').appendChild(d);$('list').scrollTop=$('list').scrollHeight;}
+async function send(){if(busy)return;const text=$('q').value.trim();if(!text&&!imgB64)return;busy=true;$('send').disabled=true;
+const body='['+MODES[mode]+']\n'+(text||'Разбери фото и выполни по режиму.');
+const qLabel=imgB64?('📷 '+(text||'фото')).trim():text;
+$('q').value='';grow();addLoad();
+const content=imgB64?[{type:'text',text:body},{type:'image_url',image_url:{url:'data:image/jpeg;base64,'+imgB64}}]:body;
+let answer,draw=null;
+try{answer=await askAll(content,body);draw=parseDraw(answer);}catch(e){answer='Нейронка не ответила ('+(e.message||'ошибка')+'). Бесплатный сервер перегружен — тыкни ещё раз.';}
+const l=$('load');if(l)l.remove();
+items.push({q:qLabel,a:answer,draw});save();renderList();
+$('list').scrollTop=$('list').scrollHeight;
+imgB64=null;$('prev').hidden=true;busy=false;$('send').disabled=false;}
+$('send').onclick=send;
+const q=$('q');
+function grow(){q.style.height='auto';q.style.height=Math.min(q.scrollHeight,120)+'px';}
+q.addEventListener('input',grow);
+q.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}});
+$('navH').onclick=()=>{$('tabHelper').hidden=false;$('tabDraw').hidden=true;$('navH').classList.add('on');$('navD').classList.remove('on');};
+$('navD').onclick=()=>{$('tabDraw').hidden=false;$('tabHelper').hidden=true;$('navD').classList.add('on');$('navH').classList.remove('on');requestAnimationFrame(repaintManual);};
+function vals(){const p=(id,d)=>parseFloat($(id).value.replace(',','.'))||d;return{a:p('va',5),b:p('vb',4),c:p('vc',3),d:p('vd',4),angle:p('vang',60)};}
+function repaintManual(){paint($('cv'),$('fig').value,vals());}
+['va','vb','vc','vd','vang'].forEach(id=>$(id).addEventListener('input',repaintManual));
+$('fig').onchange=repaintManual;
+window.addEventListener('resize',()=>{if(!$('tabDraw').hidden)repaintManual();});
+const fmt=d=>d===Math.round(d)?String(Math.round(d)):d.toFixed(1);
+function paint(canvas,fig,v){const dpr=window.devicePixelRatio||1;const w=canvas.clientWidth,h=canvas.clientHeight;if(!w||!h)return;canvas.width=w*dpr;canvas.height=h*dpr;const ctx=canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
+const g=(k,d=1)=>v[k]??d;let pts=[],names=[],sides=[],ang=null;
+if(fig==='triangle'){const a=g('a',5),b=g('b',4),c=g('c',3);const x=(a*a+c*c-b*b)/(2*a);const hh=Math.sqrt(Math.max(c*c-x*x,.01));pts=[[0,0],[a,0],[x,hh]];names=['A','B','C'];sides=['a','b','c'];ang=v.angle;}
+else if(fig==='rect'){const a=g('a',6),b=g('b',4);pts=[[0,0],[a,0],[a,b],[0,b]];names=['A','B','C','D'];sides=['a','b','a','b'];}
+else if(fig==='parallelogram'){const a=g('a',6),b=g('b',4);const r=g('angle',60)*Math.PI/180;pts=[[0,0],[a,0],[a+b*Math.cos(r),b*Math.sin(r)],[b*Math.cos(r),b*Math.sin(r)]];names=['A','B','C','D'];sides=['a','b','a','b'];ang=v.angle;}
+else{const a=g('a',8),b=g('b',5),c=g('c',4),dd=g('d',4);let diff=a-b;if(Math.abs(diff)<.01)diff=diff<0?-.01:.01;const dx=(c*c-dd*dd+diff*diff)/(2*diff);const hh=Math.sqrt(Math.max(c*c-dx*dx,.01));pts=[[0,0],[dx,hh],[dx+b,hh],[a,0]];names=['A','B','C','D'];sides=['c','b','d','a'];}
+const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);const mnX=Math.min(...xs),mxX=Math.max(...xs),mnY=Math.min(...ys),mxY=Math.max(...ys);const pad=46;
+const s=Math.min((w-2*pad)/Math.max(mxX-mnX,.001),(h-2*pad)/Math.max(mxY-mnY,.001));if(!isFinite(s)||s<=0)return;
+const ox=(w-(mxX-mnX)*s)/2-mnX*s,oy=(h-(mxY-mnY)*s)/2+mxY*s;const T=p=>[p[0]*s+ox,oy-p[1]*s];const tp=pts.map(T);
+ctx.strokeStyle='#B39DFF';ctx.lineWidth=2.2;ctx.lineJoin='round';ctx.beginPath();ctx.moveTo(tp[0][0],tp[0][1]);tp.slice(1).forEach(p=>ctx.lineTo(p[0],p[1]));ctx.closePath();ctx.stroke();
+const cx=tp.reduce((a,p)=>a+p[0],0)/tp.length,cy=tp.reduce((a,p)=>a+p[1],0)/tp.length;
+const lbl=(t,x,y,font,col)=>{ctx.font=font;ctx.fillStyle=col;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(t,x,y);};
+tp.forEach((p,i)=>{ctx.beginPath();ctx.arc(p[0],p[1],3.5,0,7);ctx.fillStyle='#fff';ctx.fill();const dx=p[0]-cx,dy=p[1]-cy,L=Math.hypot(dx,dy)||1;lbl(names[i],p[0]+dx/L*18,p[1]+dy/L*18,'700 14px system-ui','#fff');});
+tp.forEach((p,i)=>{const key=sides[i];if(v[key]==null)return;const qq=tp[(i+1)%tp.length];const mx=(p[0]+qq[0])/2,my=(p[1]+qq[1])/2;const dx=mx-cx,dy=my-cy,L=Math.hypot(dx,dy)||1;lbl(fmt(v[key]),mx+dx/L*16,my+dy/L*16,'12px system-ui','rgba(255,255,255,.75)');});
+if(ang!=null)lbl(fmt(ang)+'°',tp[0][0]+34,tp[0][1]-18,'600 12px system-ui','#80DEEA');}
+renderList();
+</script>
+</body>
+  </html>
